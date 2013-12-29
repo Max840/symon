@@ -23,8 +23,13 @@
 
 package com.loomcom.symon.devices;
 
-import com.loomcom.symon.*;
-import com.loomcom.symon.exceptions.*;
+import com.loomcom.symon.Bus;
+import com.loomcom.symon.MemoryRange;
+import com.loomcom.symon.exceptions.MemoryAccessException;
+import com.loomcom.symon.exceptions.MemoryRangeException;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A memory-mapped IO Device.
@@ -32,77 +37,103 @@ import com.loomcom.symon.exceptions.*;
 
 public abstract class Device implements Comparable<Device> {
 
-  /** The memory range for this device. */
-  private MemoryRange memoryRange;
+    /**
+     * Size of the device in memory
+     */
+    int size;
 
-  /** Size of the device in memory **/
-  int size;
+    /**
+     * The memory range for this device.
+     */
+    private MemoryRange memoryRange;
 
-  /** The name of the device. */
-  private String name;
+    /**
+     * The name of the device.
+     */
+    private String name;
 
-  /** Reference to the bus where this Device is attached. */
-  private Bus bus;
+    /**
+     * Reference to the bus where this Device is attached.
+     */
+    private Bus bus;
 
-  public Device(int startAddress, int endAddress, String name)
-    throws MemoryRangeException {
-    this.memoryRange = new MemoryRange(startAddress, endAddress);
-    this.size = endAddress - startAddress + 1;
-    this.name = name;
-  }
+    /**
+     * Listeners to notify on update.
+     */
+    private Set<DeviceChangeListener> deviceChangeListeners;
 
-  public Device(int startAddress, int endAddress) throws MemoryRangeException {
-    this(startAddress, endAddress, null);
-  }
-
-  /* Methods required to be implemented by inheriting classes. */
-  public abstract void write(int address, int data) throws MemoryAccessException;
-  public abstract int read(int address) throws MemoryAccessException;
-  public abstract String toString();
-
-  public void setBus(Bus bus) {
-    this.bus = bus;
-  }
-  
-  public Bus getBus() {
-    return this.bus;
-  }
-
-  public MemoryRange getMemoryRange() {
-    return memoryRange;
-  }
-
-  public int endAddress() {
-    return memoryRange.endAddress();
-  }
-
-  public int startAddress() {
-    return memoryRange.startAddress();
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getSize(){
-    return size;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  /**
-   * Compares two devices.  The sort order is defined by the sort
-   * order of the device's memory ranges.
-   */
-  public int compareTo(Device other) {
-    if (other == null) {
-      throw new NullPointerException("Cannot compare to null.");
+    public Device(int startAddress, int endAddress, String name)
+            throws MemoryRangeException {
+        this.memoryRange = new MemoryRange(startAddress, endAddress);
+        this.size = endAddress - startAddress + 1;
+        this.name = name;
+        this.deviceChangeListeners = new HashSet<DeviceChangeListener>();
     }
-    if (this == other) {
-      return 0;
+
+    public Device(int startAddress, int endAddress) throws MemoryRangeException {
+        this(startAddress, endAddress, null);
     }
-    return getMemoryRange().compareTo(other.getMemoryRange());
-  }
+
+    /* Methods required to be implemented by inheriting classes. */
+    public abstract void write(int address, int data) throws MemoryAccessException;
+
+    public abstract int read(int address) throws MemoryAccessException;
+
+    public abstract String toString();
+
+    public Bus getBus() {
+        return this.bus;
+    }
+
+    public void setBus(Bus bus) {
+        this.bus = bus;
+    }
+
+    public MemoryRange getMemoryRange() {
+        return memoryRange;
+    }
+
+    public int endAddress() {
+        return memoryRange.endAddress();
+    }
+
+    public int startAddress() {
+        return memoryRange.startAddress();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void registerListener(DeviceChangeListener listener) {
+        deviceChangeListeners.add(listener);
+    }
+
+    public void notifyListeners() {
+        for (DeviceChangeListener l : deviceChangeListeners) {
+            l.deviceStateChanged();
+        }
+    }
+
+    /**
+     * Compares two devices.  The sort order is defined by the sort
+     * order of the device's memory ranges.
+     */
+    public int compareTo(Device other) {
+        if (other == null) {
+            throw new NullPointerException("Cannot compare to null.");
+        }
+        if (this == other) {
+            return 0;
+        }
+        return getMemoryRange().compareTo(other.getMemoryRange());
+    }
 }

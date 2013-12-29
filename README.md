@@ -3,11 +3,11 @@ SYMON - A 6502 System Simulator
 
 **NOTE: THIS SOFTWARE IS UNDER ACTIVE DEVELOPMENT. Feedback is welcome!**
 
-**Version:** 0.8.5
+**Version:** 0.9.0
 
-**Last Updated:** 30 March, 2013
+**Last Updated:** 29 December, 2013
 
-Copyright (c) 2008-2013 Seth J. Morabito &lt;web@loomcom.com&gt;
+Copyright (c) 2013 Seth J. Morabito &lt;web@loomcom.com&gt;
 
 See the file COPYING for license.
 
@@ -83,6 +83,41 @@ Memory contents can be viewed (and edited) one page at a time through the Memory
 
 The last 20,000 execution steps are disassembled and logged to the Trace Log Window.
 
+### 3.6 NEW - Experimental 6545 CRTC Video
+
+![Composite Video] (https://github.com/sethm/symon/raw/master/screenshots/video_window.png)
+
+This feature is highly experimental. It's possible to open a video window from the "View" menu.
+This window simulates the output of a MOS 6545 CRT Controller located at address `$9000` and
+`$9001`.
+
+By default, the 40 x 25 character display uses video memory located at base address `$7000`.
+This means that the memory from address `$7000` (28672 decimal) to `$73E8` (29672 decimal)
+is directly mapped to video.
+
+The CRTC emulation is very rough around the edges at the moment. Only the following registers
+are supported:
+
+  - Address Register (at address `$9000`)
+  - R1: Horizontal Displayed Columns
+  - R6: Vertical Displayed Rows
+  - R9: Scan Lines per Row
+  - R10: Cursor Start Scan Line and Cursor Control Mode
+  - R11: Cursor End Scan Line
+  - R12: Display Start Address (High Byte)
+  - R13: Display Start Address (Low Byte)
+  - R14: Cursor Position (High Byte) [Read Only]
+  - R15: Cursor Position (Low Byte) [Read Only]
+
+In particular, please note that the Status register is not implemented yet. Still, the feature is ready for some testing and playing with.
+
+For more information on the 6545 CRTC and its programming model, please see the following resources
+
+  - [CRTC 6545/6845 Information (André Fachat)] (http://6502.org/users/andre/hwinfo/crtc/index.html)
+  - [CRTC Operation (André Fachat)] (http://www.6502.org/users/andre/hwinfo/crtc/crtc.html)
+  - [MOS 6545 Datasheet (PDF)] (http://www.6502.org/users/andre/hwinfo/crtc/crtc.html)
+
+
 ## 4.0 Usage
 
 ### 4.1 Building
@@ -97,7 +132,7 @@ Maven will build Symon, run unit tests, and produce a jar file in the
 Symon is meant to be invoked directly from the jar file. To run with
 Java 1.5 or greater, just type:
 
-    $ java -jar symon-0.8.5.jar
+    $ java -jar symon-0.9.0.jar
 
 When Symon is running, you should be presented with a simple graphical
 interface.
@@ -138,6 +173,8 @@ After loading a program or ROM image, clicking "Run" will start the simulator
 running.
 
 ## 5.0 Revision History
+
+  - **0.9.0:** 29 December, 2013 - First pass at a 6545 CRTC simulation.
 
   - **0.8.5:** 30 March, 2013 - ASCII display for memory window.
     Allows user to select a step count from a drop-down box.
@@ -182,10 +219,6 @@ running.
   - More extensive testing.
 
   - Clean up JavaDoc.
-
-  - Busses are defined by start address and length. Devices are defined
-    by start address and end address. They should both use start/end
-    address.
 
   - Implement CMOS 65C02 instructions and NMOS / CMOS mode flag.
 
